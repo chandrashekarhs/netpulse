@@ -16,3 +16,6 @@ jobs:
 
       - name: Build (Swift Package Manager)
         run: swift build -c release
+
+      - name: Test
+        run: swift test

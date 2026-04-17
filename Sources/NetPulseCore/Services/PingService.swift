@@ -52,7 +52,7 @@ class PingService {
         try? proc.run()
     }
 
-    private static func parseLatency(from output: String) -> Double? {
+    static func parseLatency(from output: String) -> Double? {
         guard let regex = try? NSRegularExpression(pattern: #"time=(\d+\.?\d*)\s*ms"#),
               let match = regex.firstMatch(in: output, range: NSRange(output.startIndex..., in: output)),
               let range = Range(match.range(at: 1), in: output) else { return nil }

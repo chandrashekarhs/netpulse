@@ -1,12 +1,12 @@
 import AppKit
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+public class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController!
     private var menuController: MenuController!
     private var pingService: PingService!
     private var networkMonitor: NetworkMonitor!
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    public func applicationDidFinishLaunching(_ notification: Notification) {
         guard Self.isFirstInstance() else { NSApp.terminate(nil); return }
         NSApp.setActivationPolicy(.accessory)
 
