@@ -1,0 +1,74 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: write   # required to create GitHub Releases
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Import Developer ID certificate into a temporary keychain ────────────
+      - name: Import signing certificate
+        env:
+          CERT_DATA:     ${{ secrets.DEVELOPER_ID_CERT }}
+          CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          CERT="$RUNNER_TEMP/cert.p12"
+
+          echo "$CERT_DATA" | base64 --decode -o "$CERT"
+
+          security create-keychain -p "ci-temp" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "ci-temp" "$KEYCHAIN"
+          security import "$CERT" -k "$KEYCHAIN" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security list-keychain -d user -s "$KEYCHAIN"
+          # Allow codesign to access the key without a UI prompt
+          security set-key-partition-list -S apple-tool:,apple: -s -k "ci-temp" "$KEYCHAIN"
+
+      # ── Build ────────────────────────────────────────────────────────────────
+      - name: Build (Swift Package Manager)
+        run: swift build -c release
+
+      # ── Bundle + sign with Developer ID + hardened runtime ──────────────────
+      - name: Package & sign
+        env:
+          DEVELOPER_ID: ${{ secrets.DEVELOPER_ID_NAME }}
+        run: bash Scripts/package.sh
+
+      # ── Notarize: upload DMG to Apple, wait for approval ────────────────────
+      - name: Notarize DMG
+        env:
+          APPLE_ID:       ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID:  ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PWD:  ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          xcrun notarytool submit NetPulse.dmg \
+            --apple-id   "$APPLE_ID"      \
+            --team-id    "$APPLE_TEAM_ID" \
+            --password   "$APPLE_APP_PWD" \
+            --wait
+
+      # ── Staple: attach the notarization ticket so it works offline ───────────
+      - name: Staple notarization ticket
+        run: xcrun stapler staple NetPulse.dmg
+
+      # ── Publish ──────────────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NetPulse.dmg
+          body: |
+            ## Installation
+            1. Download **NetPulse.dmg** below
+            2. Open it and drag **NetPulse.app** to Applications
+            3. Launch from Spotlight or your Applications folder
+
+            Signed and notarized by Apple — opens without any Gatekeeper warning.

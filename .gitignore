@@ -1,0 +1,21 @@
+# SPM build artifacts
+.build/
+.swiftpm/
+
+# Generated packaging outputs
+*.dmg
+*.icns
+AppIcon.iconset/
+NetPulse.app/
+PingMonitor.app/
+_dmg_stage/
+
+# Stale root-level binaries (pre-SPM)
+/NetPulse
+/PingMonitor
+
+# Claude Code — local settings are machine-specific (team settings go in .claude/settings.json)
+.claude/settings.local.json
+
+# macOS
+.DS_Store
