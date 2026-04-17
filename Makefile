@@ -1,13 +1,16 @@
 APP     = NetPulse
 VERSION = 1.0.0
 
-.PHONY: build run package clean
+.PHONY: build run test package clean
 
 build:
 	swift build -c release
 
 run:
 	swift run
+
+test:
+	swift test
 
 package: build
 	bash Scripts/package.sh
