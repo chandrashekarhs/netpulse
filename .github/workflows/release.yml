@@ -14,8 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ── Import Developer ID certificate into a temporary keychain ────────────
+      # ── Import Developer ID certificate (skipped if secret not configured) ───
       - name: Import signing certificate
+        if: ${{ secrets.DEVELOPER_ID_CERT != '' }}
         env:
           CERT_DATA:     ${{ secrets.DEVELOPER_ID_CERT }}
           CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
@@ -30,25 +31,25 @@ jobs:
           security unlock-keychain -p "ci-temp" "$KEYCHAIN"
           security import "$CERT" -k "$KEYCHAIN" -P "$CERT_PASSWORD" -T /usr/bin/codesign
           security list-keychain -d user -s "$KEYCHAIN"
-          # Allow codesign to access the key without a UI prompt
           security set-key-partition-list -S apple-tool:,apple: -s -k "ci-temp" "$KEYCHAIN"
 
       # ── Build ────────────────────────────────────────────────────────────────
       - name: Build (Swift Package Manager)
         run: swift build -c release
 
-      # ── Bundle + sign with Developer ID + hardened runtime ──────────────────
+      # ── Package + sign (Developer ID if secret set, otherwise ad-hoc) ────────
       - name: Package & sign
         env:
           DEVELOPER_ID: ${{ secrets.DEVELOPER_ID_NAME }}
         run: bash Scripts/package.sh
 
-      # ── Notarize: upload DMG to Apple, wait for approval ────────────────────
+      # ── Notarize + staple (skipped if Apple credentials not configured) ───────
       - name: Notarize DMG
+        if: ${{ secrets.APPLE_ID != '' }}
         env:
-          APPLE_ID:       ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID:  ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_APP_PWD:  ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_ID:      ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PWD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
           xcrun notarytool submit NetPulse.dmg \
             --apple-id   "$APPLE_ID"      \
@@ -56,8 +57,8 @@ jobs:
             --password   "$APPLE_APP_PWD" \
             --wait
 
-      # ── Staple: attach the notarization ticket so it works offline ───────────
       - name: Staple notarization ticket
+        if: ${{ secrets.APPLE_ID != '' }}
         run: xcrun stapler staple NetPulse.dmg
 
       # ── Publish ──────────────────────────────────────────────────────────────
@@ -71,4 +72,4 @@ jobs:
             2. Open it and drag **NetPulse.app** to Applications
             3. Launch from Spotlight or your Applications folder
 
-            Signed and notarized by Apple — opens without any Gatekeeper warning.
+            > Ad-hoc signed build — right-click → Open on first launch to bypass Gatekeeper.
