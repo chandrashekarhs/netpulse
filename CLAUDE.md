@@ -51,6 +51,26 @@ Scripts/
 | Timeout   | Red    |
 | No network| Gray   |
 
+## Claude Agents & Commands
+
+### Agents (`.claude/agents/`)
+Specialized sub-agents Claude can spin up automatically:
+
+| Agent | When it's used |
+|---|---|
+| `swift-reviewer` | Reviews Swift/AppKit code — weak self, main thread, memory leaks |
+| `release` | Walks through the full release process step by step |
+| `debug` | Diagnoses runtime issues — ping failures, duplicate instances, menu bugs |
+
+### Slash Commands (`.claude/commands/`)
+Type these directly in Claude Code:
+
+| Command | What it does |
+|---|---|
+| `/release` | Starts the release agent — checks version, walks through tagging |
+| `/review` | Runs swift-reviewer on all uncommitted Swift changes |
+| `/debug` | Starts the debug agent — asks for symptoms, works through failure modes |
+
 ## Releasing
 
 Push a git tag to trigger GitHub Actions (`.github/workflows/release.yml`):
