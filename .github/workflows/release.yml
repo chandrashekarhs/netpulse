@@ -9,23 +9,31 @@ jobs:
   build:
     runs-on: macos-latest
     permissions:
-      contents: write   # required to create GitHub Releases
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
 
-      # ── Import Developer ID certificate (skipped if secret not configured) ───
+      # ── Detect which credentials are available ────────────────────────────────
+      - name: Detect available credentials
+        id: creds
+        env:
+          CERT:     ${{ secrets.DEVELOPER_ID_CERT }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+        run: |
+          [ -n "$CERT" ]     && echo "has_cert=true"     >> "$GITHUB_OUTPUT" || echo "has_cert=false"     >> "$GITHUB_OUTPUT"
+          [ -n "$APPLE_ID" ] && echo "has_apple_id=true" >> "$GITHUB_OUTPUT" || echo "has_apple_id=false" >> "$GITHUB_OUTPUT"
+
+      # ── Import Developer ID certificate (skipped when secret not set) ─────────
       - name: Import signing certificate
-        if: ${{ secrets.DEVELOPER_ID_CERT != '' }}
+        if: steps.creds.outputs.has_cert == 'true'
         env:
           CERT_DATA:     ${{ secrets.DEVELOPER_ID_CERT }}
           CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
         run: |
           KEYCHAIN="$RUNNER_TEMP/build.keychain"
           CERT="$RUNNER_TEMP/cert.p12"
-
           echo "$CERT_DATA" | base64 --decode -o "$CERT"
-
           security create-keychain -p "ci-temp" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "ci-temp" "$KEYCHAIN"
@@ -33,19 +41,19 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN"
           security set-key-partition-list -S apple-tool:,apple: -s -k "ci-temp" "$KEYCHAIN"
 
-      # ── Build ────────────────────────────────────────────────────────────────
+      # ── Build ─────────────────────────────────────────────────────────────────
       - name: Build (Swift Package Manager)
         run: swift build -c release
 
-      # ── Package + sign (Developer ID if secret set, otherwise ad-hoc) ────────
+      # ── Package + sign (Developer ID if cert present, otherwise ad-hoc) ───────
       - name: Package & sign
         env:
           DEVELOPER_ID: ${{ secrets.DEVELOPER_ID_NAME }}
         run: bash Scripts/package.sh
 
-      # ── Notarize + staple (skipped if Apple credentials not configured) ───────
+      # ── Notarize + staple (skipped when Apple credentials not set) ────────────
       - name: Notarize DMG
-        if: ${{ secrets.APPLE_ID != '' }}
+        if: steps.creds.outputs.has_apple_id == 'true'
         env:
           APPLE_ID:      ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -58,10 +66,10 @@ jobs:
             --wait
 
       - name: Staple notarization ticket
-        if: ${{ secrets.APPLE_ID != '' }}
+        if: steps.creds.outputs.has_apple_id == 'true'
         run: xcrun stapler staple NetPulse.dmg
 
-      # ── Publish ──────────────────────────────────────────────────────────────
+      # ── Publish ───────────────────────────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
