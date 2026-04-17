@@ -1,0 +1,1 @@
+Use the release agent to guide me through cutting a new NetPulse release. Start by checking the current version and the latest git tag, then walk me through each step.

@@ -1,0 +1,1 @@
+Use the swift-reviewer agent to review all Swift files that have been modified but not yet committed (check with git diff and git status). Report bugs first, then style issues.
