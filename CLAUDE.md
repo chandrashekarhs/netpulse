@@ -68,8 +68,8 @@ Type these directly in Claude Code:
 | Command | What it does |
 |---|---|
 | `/release` | Starts the release agent — checks version, walks through tagging |
-| `/review` | Runs swift-reviewer on all uncommitted Swift changes |
-| `/debug` | Starts the debug agent — asks for symptoms, works through failure modes |
+| `/swift-review` | Runs swift-reviewer on all uncommitted Swift changes |
+| `/diagnose` | Starts the debug agent — asks for symptoms, works through failure modes |
 
 ## Releasing
 
