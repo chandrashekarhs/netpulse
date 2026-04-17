@@ -55,6 +55,18 @@ git push origin feature/your-change
 # open PR on GitHub
 ```
 
+### Claude Code
+
+This project includes Claude Code agents and slash commands for common dev tasks:
+
+| Command | What it does |
+|---|---|
+| `/release` | Walks through version bump → PR → tag step by step |
+| `/review` | Reviews uncommitted Swift changes for AppKit best practices |
+| `/debug` | Diagnoses runtime issues (ping failures, duplicate instances, menu bugs) |
+
+See `CLAUDE.md` for full project context and agent details.
+
 CI runs `swift build -c release` on every PR. Squash merge only.
 
 ## Releasing
