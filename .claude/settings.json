@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(swift build*)",
+      "Bash(swift run*)",
+      "Bash(swift package*)",
+      "Bash(make*)",
+      "Bash(git tag*)",
+      "Bash(git push origin v*)",
+      "Bash(bash Scripts/package.sh)",
+      "Bash(swift Scripts/make_icon.swift)"
+    ]
+  }
+}
