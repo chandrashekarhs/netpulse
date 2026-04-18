@@ -3,7 +3,7 @@ set -e
 
 APP="NetPulse"
 BUNDLE_ID="com.$(whoami).netpulse"
-VERSION="1.2.1"
+VERSION="1.3.0"
 DMG="${APP}.dmg"
 BINARY=".build/release/${APP}"
 

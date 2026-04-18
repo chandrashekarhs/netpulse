@@ -44,7 +44,9 @@ Scripts/
 - **Callback pattern** — `PingService.onResult` and `NetworkMonitor.onStatusChange` deliver events to `AppDelegate` on the main queue.
 - **Two PingService instances** — `pingService` (WAN) drives the status bar, alert evaluation, and menu; `lanPingService` (LAN) drives only the compact LAN summary line. Both share the same ping interval.
 - **AlertService anti-spam latch** — fires one `UNUserNotification` per bad run; resets on recovery. `onAlert` callback enables unit testing without triggering `UNUserNotificationCenter` (requires app bundle).
-- **Sparkline** — `MenuController.sparklineItem(for:)` maps each `PingResult` to one of 8 Unicode block chars (`▁`–`█`) scaled relative to the min/max of the current history window; timeouts render as `·`. Bars are relative, not absolute — always check the stats line for actual ms values.
+- **Sparkline** — `MenuController.sparklineItem(for:)` maps each `PingResult` to one of 8 Unicode block chars (`▁`–`█`) using absolute latency thresholds (20/40/60/80/100/150/200 ms); timeouts render as `·`. A thin `▏` block appended at the right acts as a "now" playhead marker. Left=oldest, right=newest.
+- **Menu history rows** — `addHistoryItems` displays only the 5 most recent pings (newest first). Internal `PingService` history buffer remains 10 samples so stats and alerts use the full window.
+- **WAN/LAN header symmetry** — Menu header is two items: `NetPulse` (app name) + `WAN: host   N% loss`. LAN section is also two items: `LAN: host   N% loss` + indented stats line. Both sections use the same format.
 
 ## UserDefaults Keys
 
@@ -90,8 +92,8 @@ Type these directly in Claude Code:
 Push a git tag to trigger GitHub Actions (`.github/workflows/release.yml`):
 
 ```bash
-git tag v1.2.1
-git push origin v1.2.1
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 The workflow runs on `macos-latest`, calls `make build` + `bash Scripts/package.sh`, and publishes `NetPulse.dmg` as a GitHub Release asset. Free on public repos; costs 10× minutes on private repos (2 000 min/month free tier).

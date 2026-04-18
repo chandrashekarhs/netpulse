@@ -2,17 +2,18 @@
 
 A lightweight macOS menu bar app that monitors network latency in real time. Pings configurable WAN and LAN hosts every few seconds and displays results — color-coded — directly in your status bar, with stats, packet loss, jitter, and smart alert notifications.
 
-![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue) ![Swift](https://img.shields.io/badge/Swift-5.9-orange) ![License](https://img.shields.io/badge/license-MIT-green)
+![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue) ![Swift](https://img.shields.io/badge/Swift-5.9-orange) ![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.3.0-blue)
 
 ## Features
 
 - Live latency display in the menu bar (green / orange / red)
-- Last 10 ping results in the dropdown
-- **Packet loss %** shown in the menu header
-- **Sparkline graph** — `▁▂▃▄▅▆▇█` Unicode bar chart of the last 10 pings; timeouts shown as `·`
+- Last 5 ping results in the dropdown (10-sample window used internally for stats)
+- **WAN / LAN symmetric headers** — both sections use the same `WAN: host   N% loss` / `LAN: host   N% loss` format
+- **Packet loss %** shown in both WAN and LAN headers
+- **Sparkline graph** — `▁▂▃▄▅▆▇█▏` Unicode bar chart with a thin playhead marker at the right (newest); timeouts shown as `·`; bars use absolute latency thresholds
 - **Min / avg / max / jitter** stats summary above the ping history
+- **LAN two-line summary** — host + loss on one line, avg + jitter stats indented below
 - **Latency alerts** — macOS notification when latency exceeds a configurable threshold (default 200 ms); smart anti-spam: one alert per bad run, suppressed until recovery
-- **LAN host monitoring** — second configurable ping target (default: `192.168.1.1`) shown as a compact summary so you can distinguish WAN vs LAN problems at a glance
 - Configurable WAN host, LAN host, ping interval, and alert threshold
 - Launch at Login support
 - No Dock icon — lives entirely in the menu bar
@@ -42,11 +43,14 @@ The colored dot in your menu bar gives you an instant signal:
 
 ---
 
-### Menu header — WAN host + packet loss
+### Menu header — app name + WAN status
 
 ```
-NetPulse  —  8.8.8.8   2% loss
+NetPulse
+WAN: 8.8.8.8   2% loss
 ```
+
+The header is two lines. The app name sits at the top; directly below it is the WAN status in the same format as the LAN line, making them easy to compare at a glance.
 
 | Part | Meaning |
 |---|---|
@@ -57,19 +61,19 @@ NetPulse  —  8.8.8.8   2% loss
 
 **Example scenarios:**
 
-- `8.8.8.8   0% loss` — everything is fine
-- `8.8.8.8   30% loss` — intermittent packet loss; video calls will suffer
-- `8.8.8.8   100% loss` — no internet (check LAN line below to determine if it's your router or ISP)
+- `WAN: 8.8.8.8   0% loss` — everything is fine
+- `WAN: 8.8.8.8   30% loss` — intermittent packet loss; video calls will suffer
+- `WAN: 8.8.8.8   100% loss` — no internet (check LAN section below to determine if it's your router or ISP)
 
 ---
 
 ### Sparkline graph
 
 ```
-▁▂▃▄▃▂▄▅▇█  ←oldest   newest→
+▁▂▃▄▃▂▄▅▇█▏
 ```
 
-A Unicode bar chart of the last 10 pings, read left (oldest) to right (newest). Each bar is one ping result.
+A Unicode bar chart of the last 10 pings, read left (oldest) to right (newest). The thin `▏` at the right is a "now" marker — it sits at the present moment, like a playhead. Each bar is one ping result.
 
 | Symbol | Meaning |
 |---|---|
@@ -141,13 +145,14 @@ A single timeout is usually noise. Three or more timeouts in a row indicates a r
 
 ---
 
-### LAN summary line
+### LAN summary
 
 ```
-LAN: 192.168.1.1   0% loss   avg: 2 ms   jitter: 0 ms
+LAN: 192.168.1.1   0% loss
+     avg: 2 ms   jitter: 0 ms
 ```
 
-A compact view of your secondary (LAN) host — typically your router. Use this line together with the WAN header to diagnose where a problem lives:
+A two-line view of your secondary (LAN) host — typically your router. Use this line together with the WAN header to diagnose where a problem lives:
 
 | WAN | LAN | Likely cause |
 |---|---|---|
@@ -158,19 +163,23 @@ A compact view of your secondary (LAN) host — typically your router. Use this 
 
 **Example — ISP problem:**
 ```
-NetPulse  —  8.8.8.8   40% loss
-·▂·▅·▇·█·▃  ←oldest   newest→
+NetPulse
+WAN: 8.8.8.8   40% loss
+·▂·▅·▇·█·▃▏
 min: 80 ms   avg: 210 ms   max: 890 ms   jitter: 190 ms
-LAN: 192.168.1.1   0% loss   avg: 1 ms   jitter: 0 ms
+LAN: 192.168.1.1   0% loss
+     avg: 1 ms   jitter: 0 ms
 ```
 Router responds instantly (LAN clean), but WAN is dropping packets and spiking. Call your ISP.
 
 **Example — Wi-Fi problem:**
 ```
-NetPulse  —  8.8.8.8   20% loss
-▂▄·▅▃·▆▄·▅  ←oldest   newest→
+NetPulse
+WAN: 8.8.8.8   20% loss
+▂▄·▅▃·▆▄·▅▏
 min: 30 ms   avg: 120 ms   max: 450 ms   jitter: 80 ms
-LAN: 192.168.1.1   20% loss   avg: 45 ms   jitter: 35 ms
+LAN: 192.168.1.1   20% loss
+     avg: 45 ms   jitter: 35 ms
 ```
 Both WAN and LAN are struggling. The problem is between your Mac and the router — try moving closer or switching to Ethernet.
 
