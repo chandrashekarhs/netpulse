@@ -2,7 +2,7 @@ import Foundation
 
 enum Constants {
     static let appName    = "NetPulse"
-    static let appVersion = "1.1.0"
+    static let appVersion = "1.2.0"
     static let bundleID   = "com.\(NSUserName()).netpulse"
 
     enum Defaults {
