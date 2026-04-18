@@ -27,7 +27,7 @@ class MenuController {
         menu.addItem(.separator())
 
         menu.addItem(sparklineItem(for: history))
-        menu.addItem(statsSummaryItem(for: history))
+        addStatsItems(for: history)
         addHistoryItems(history)
 
         menu.addItem(.separator())
@@ -99,21 +99,25 @@ class MenuController {
         return item
     }
 
-    private func statsSummaryItem(for history: [PingResult]) -> NSMenuItem {
+    private func addStatsItems(for history: [PingResult]) {
         let latencies = history.compactMap { $0.latency }
-        let title: String
+        let line1: String
+        let line2: String
         if latencies.isEmpty {
-            title = "min: —   avg: —   max: —   jitter: —"
+            line1 = "avg: —   jitter: —"
+            line2 = "min: —   max: —"
         } else {
             let mn  = latencies.min()!
             let mx  = latencies.max()!
             let avg = latencies.reduce(0, +) / Double(latencies.count)
-            title = String(format: "min: %.0f ms   avg: %.0f ms   max: %.0f ms   jitter: %.0f ms",
-                           mn, avg, mx, jitter(from: latencies))
+            line1 = String(format: "avg: %.0f ms   jitter: %.0f ms", avg, jitter(from: latencies))
+            line2 = String(format: "min: %.0f ms   max: %.0f ms", mn, mx)
         }
-        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        item.isEnabled = false
-        return item
+        for title in [line1, line2] {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            menu.addItem(item)
+        }
     }
 
     private func addLanItems(host: String, history: [PingResult]) {
@@ -125,16 +129,23 @@ class MenuController {
         headerItem.isEnabled = false
         menu.addItem(headerItem)
 
-        let statsStr: String
+        let line1: String
+        let line2: String
         if latencies.isEmpty {
-            statsStr = "—"
+            line1 = "avg: —   jitter: —"
+            line2 = "min: —   max: —"
         } else {
+            let mn  = latencies.min()!
+            let mx  = latencies.max()!
             let avg = latencies.reduce(0, +) / Double(latencies.count)
-            statsStr = String(format: "avg: %.0f ms   jitter: %.0f ms", avg, jitter(from: latencies))
+            line1 = String(format: "avg: %.0f ms   jitter: %.0f ms", avg, jitter(from: latencies))
+            line2 = String(format: "min: %.0f ms   max: %.0f ms", mn, mx)
         }
-        let statsItem = NSMenuItem(title: "     \(statsStr)", action: nil, keyEquivalent: "")
-        statsItem.isEnabled = false
-        menu.addItem(statsItem)
+        for title in [line1, line2] {
+            let item = NSMenuItem(title: "     \(title)", action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            menu.addItem(item)
+        }
     }
 
     private func addHistoryItems(_ history: [PingResult]) {
