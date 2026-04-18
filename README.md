@@ -9,6 +9,7 @@ A lightweight macOS menu bar app that monitors network latency in real time. Pin
 - Live latency display in the menu bar (green / orange / red)
 - Last 10 ping results in the dropdown
 - **Packet loss %** shown in the menu header
+- **Sparkline graph** — `▁▂▃▄▅▆▇█` Unicode bar chart of the last 10 pings; timeouts shown as `·`
 - **Min / avg / max / jitter** stats summary above the ping history
 - **Latency alerts** — macOS notification when latency exceeds a configurable threshold (default 200 ms); smart anti-spam: one alert per bad run, suppressed until recovery
 - **LAN host monitoring** — second configurable ping target (default: `192.168.1.1`) shown as a compact summary so you can distinguish WAN vs LAN problems at a glance
@@ -59,6 +60,38 @@ NetPulse  —  8.8.8.8   2% loss
 - `8.8.8.8   0% loss` — everything is fine
 - `8.8.8.8   30% loss` — intermittent packet loss; video calls will suffer
 - `8.8.8.8   100% loss` — no internet (check LAN line below to determine if it's your router or ISP)
+
+---
+
+### Sparkline graph
+
+```
+▁▂▃▄▃▂▄▅▇█  ←oldest   newest→
+```
+
+A Unicode bar chart of the last 10 pings, read left (oldest) to right (newest). Each bar is one ping result.
+
+| Symbol | Meaning |
+|---|---|
+| `▁` `▂` `▃` `▄` `▅` `▆` `▇` `█` | Relative latency — taller bar = higher latency |
+| `·` | Ping timed out |
+
+Bars are scaled **relative to your current window** — the tallest bar always represents your worst recent ping, the shortest your best. This makes spikes immediately visible even on a generally fast connection.
+
+**Example patterns:**
+
+| Sparkline | What it looks like | Interpretation |
+|---|---|---|
+| `▂▂▂▂▂▂▂▂▂▂` | Flat low line | Stable, fast connection |
+| `▄▄▄▄▄▄▄▄▄▄` | Flat mid line | Stable but slower, or all pings identical |
+| `▁▁▁▂▄▇█▇▄▂` | Mountain shape | Latency spiked and recovered |
+| `▂▂▂▂▂▂▂▂▂█` | Sudden spike at right | Latest ping was anomalously slow |
+| `▁▂▃▅▇▇▅▃▂▁` | Rounded hill | Gradual degradation then recovery |
+| `·▂·▃·▂·▂·▂` | Alternating dots | Intermittent packet loss every other ping |
+| `··········` | All dots | Complete outage — host unreachable |
+| `▄▄▄▄▄▄▄▄▄·` | Flat then dot | Connection just dropped |
+
+**Note:** Because bars are relative, a flat `▄▄▄▄▄▄▄▄▄▄` line can mean either consistently good latency or consistently bad — check the stats line below it for the actual numbers.
 
 ---
 
@@ -126,14 +159,16 @@ A compact view of your secondary (LAN) host — typically your router. Use this 
 **Example — ISP problem:**
 ```
 NetPulse  —  8.8.8.8   40% loss
+·▂·▅·▇·█·▃  ←oldest   newest→
 min: 80 ms   avg: 210 ms   max: 890 ms   jitter: 190 ms
 LAN: 192.168.1.1   0% loss   avg: 1 ms   jitter: 0 ms
 ```
-Your router responds instantly, but internet traffic is degraded. Call your ISP.
+Router responds instantly (LAN clean), but WAN is dropping packets and spiking. Call your ISP.
 
 **Example — Wi-Fi problem:**
 ```
 NetPulse  —  8.8.8.8   20% loss
+▂▄·▅▃·▆▄·▅  ←oldest   newest→
 min: 30 ms   avg: 120 ms   max: 450 ms   jitter: 80 ms
 LAN: 192.168.1.1   20% loss   avg: 45 ms   jitter: 35 ms
 ```
