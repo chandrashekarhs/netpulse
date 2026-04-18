@@ -5,7 +5,8 @@ enum SettingsPanel {
         host: String,
         interval: Double,
         alertThreshold: Double,
-        completion: @escaping (String, Double, Double) -> Void
+        lanHost: String,
+        completion: @escaping (String, Double, Double, String) -> Void
     ) {
         NSApp.activate(ignoringOtherApps: true)
 
@@ -15,7 +16,7 @@ enum SettingsPanel {
         alert.addButton(withTitle: "Save")
         alert.addButton(withTitle: "Cancel")
 
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 310, height: 104))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 310, height: 136))
 
         func makeLabel(_ text: String, y: CGFloat) -> NSTextField {
             let f = NSTextField(labelWithString: text)
@@ -23,6 +24,10 @@ enum SettingsPanel {
             f.alignment = .right
             return f
         }
+
+        let lanHostField = NSTextField(string: lanHost)
+        lanHostField.frame             = NSRect(x: 118, y: 104, width: 192, height: 24)
+        lanHostField.placeholderString = "e.g. 192.168.1.1"
 
         let hostField = NSTextField(string: host)
         hostField.frame             = NSRect(x: 118, y: 72, width: 192, height: 24)
@@ -36,8 +41,9 @@ enum SettingsPanel {
         alertField.frame             = NSRect(x: 118, y: 8, width: 60, height: 24)
         alertField.placeholderString = "200"
 
-        [makeLabel("Host / IP:", y: 74), makeLabel("Interval (sec):", y: 42), makeLabel("Alert (ms):", y: 10),
-         hostField, intervalField, alertField].forEach { container.addSubview($0) }
+        [makeLabel("LAN Host:", y: 106), makeLabel("WAN Host / IP:", y: 74),
+         makeLabel("Interval (sec):", y: 42), makeLabel("Alert (ms):", y: 10),
+         lanHostField, hostField, intervalField, alertField].forEach { container.addSubview($0) }
         alert.accessoryView = container
 
         guard alert.runModal() == .alertFirstButtonReturn else { return }
@@ -45,9 +51,10 @@ enum SettingsPanel {
         let newHost      = hostField.stringValue.trimmingCharacters(in: .whitespaces)
         let newInterval  = max(1.0, Double(intervalField.stringValue) ?? Constants.Defaults.pingInterval)
         let newThreshold = max(1.0, Double(alertField.stringValue) ?? Constants.Defaults.alertThreshold)
+        let newLanHost   = lanHostField.stringValue.trimmingCharacters(in: .whitespaces)
         guard !newHost.isEmpty else { return }
 
-        completion(newHost, newInterval, newThreshold)
+        completion(newHost, newInterval, newThreshold, newLanHost.isEmpty ? lanHost : newLanHost)
     }
 
     static func showAbout(host: String, interval: Double) {

@@ -4,6 +4,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController!
     private var menuController: MenuController!
     private var pingService: PingService!
+    private var lanPingService: PingService!
     private var networkMonitor: NetworkMonitor!
     private var alertService: AlertService!
 
@@ -11,9 +12,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         guard Self.isFirstInstance() else { NSApp.terminate(nil); return }
         NSApp.setActivationPolicy(.accessory)
 
-        let (host, interval, alertThreshold) = Self.loadSettings()
+        let (host, interval, alertThreshold, lanHost) = Self.loadSettings()
 
         pingService         = PingService(host: host, interval: interval)
+        lanPingService      = PingService(host: lanHost, interval: interval)
         networkMonitor      = NetworkMonitor()
         statusBarController = StatusBarController()
         menuController      = MenuController(target: self)
@@ -24,11 +26,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         // Build initial menu immediately (shows "Waiting for first ping…")
         rebuildMenu()
 
-        // Network down: update status bar right away; reconnect: let next ping show result
+        // Network down: stop both services; reconnect: resume both
         networkMonitor.onStatusChange = { [weak self] connected in
             guard let self else { return }
             if !connected {
                 self.statusBarController.update(latency: nil, isConnected: false)
+                self.lanPingService.stop()
+            } else {
+                self.lanPingService.start()
             }
             self.rebuildMenu()
         }
@@ -41,8 +46,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
             self.rebuildMenu()
         }
 
+        lanPingService.onResult = { [weak self] _ in
+            self?.rebuildMenu()
+        }
+
         networkMonitor.start()
         pingService.start()
+        lanPingService.start()
     }
 
     // MARK: - Menu actions
@@ -51,15 +61,18 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         SettingsPanel.show(
             host: pingService.host,
             interval: pingService.interval,
-            alertThreshold: alertService.alertThreshold
-        ) { [weak self] newHost, newInterval, newThreshold in
+            alertThreshold: alertService.alertThreshold,
+            lanHost: lanPingService.host
+        ) { [weak self] newHost, newInterval, newThreshold, newLanHost in
             guard let self else { return }
             UserDefaults.standard.set(newHost,      forKey: Constants.UserDefaultsKey.pingHost)
             UserDefaults.standard.set(newInterval,  forKey: Constants.UserDefaultsKey.pingInterval)
             UserDefaults.standard.set(newThreshold, forKey: Constants.UserDefaultsKey.alertThreshold)
+            UserDefaults.standard.set(newLanHost,   forKey: Constants.UserDefaultsKey.lanPingHost)
             self.alertService.alertThreshold = newThreshold
             self.alertService.reset()
             self.pingService.restart(host: newHost, interval: newInterval)
+            self.lanPingService.restart(host: newLanHost, interval: newInterval)
             self.rebuildMenu()
         }
     }
@@ -86,11 +99,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         menuController.rebuild(
             host: pingService.host,
             history: pingService.history,
+            lanHost: lanPingService.host,
+            lanHistory: lanPingService.history,
             isLoginEnabled: LoginItemManager.isEnabled
         )
     }
 
-    private static func loadSettings() -> (host: String, interval: Double, alertThreshold: Double) {
+    private static func loadSettings() -> (host: String, interval: Double, alertThreshold: Double, lanHost: String) {
         let defaults = UserDefaults.standard
         let host = {
             let h = defaults.string(forKey: Constants.UserDefaultsKey.pingHost) ?? ""
@@ -104,6 +119,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
             let t = defaults.double(forKey: Constants.UserDefaultsKey.alertThreshold)
             return t >= 1 ? t : Constants.Defaults.alertThreshold
         }()
-        return (host, interval, alertThreshold)
+        let lanHost = {
+            let h = defaults.string(forKey: Constants.UserDefaultsKey.lanPingHost) ?? ""
+            return h.isEmpty ? Constants.Defaults.lanPingHost : h
+        }()
+        return (host, interval, alertThreshold, lanHost)
     }
 }
