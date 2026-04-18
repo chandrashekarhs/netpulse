@@ -72,28 +72,25 @@ class MenuController {
     }
 
     private func sparklineItem(for history: [PingResult]) -> NSMenuItem {
-        let blocks: [Character] = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
         let title: String
         if history.isEmpty {
             title = "—"
         } else {
-            let latencies = history.map { $0.latency }
-            let successes = latencies.compactMap { $0 }
-            if successes.isEmpty {
-                title = String(repeating: "·", count: latencies.count)
-            } else {
-                let mn    = successes.min()!
-                let mx    = successes.max()!
-                let range = mx - mn
-                title = String(latencies.map { lat -> Character in
-                    guard let ms = lat else { return "·" }
-                    guard range > 0 else { return blocks[3] }
-                    let index = min(7, Int((ms - mn) / range * 8))
-                    return blocks[index]
-                })
-            }
+            title = String(history.map { result -> Character in
+                guard let ms = result.latency else { return "·" }
+                switch ms {
+                case ..<20:  return "▁"
+                case ..<40:  return "▂"
+                case ..<60:  return "▃"
+                case ..<80:  return "▄"
+                case ..<100: return "▅"
+                case ..<150: return "▆"
+                case ..<200: return "▇"
+                default:     return "█"
+                }
+            })
         }
-        let item = NSMenuItem(title: title + "  ←oldest   newest→", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
         return item
     }
