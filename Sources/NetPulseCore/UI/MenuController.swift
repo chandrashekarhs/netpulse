@@ -142,7 +142,7 @@ class MenuController {
             line2 = String(format: "min: %.0f ms   max: %.0f ms", mn, mx)
         }
         for title in [line1, line2] {
-            let item = NSMenuItem(title: "     \(title)", action: nil, keyEquivalent: "")
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
             item.isEnabled = false
             menu.addItem(item)
         }
