@@ -22,6 +22,7 @@ class MenuController {
         menu.addItem(header)
         menu.addItem(.separator())
 
+        menu.addItem(sparklineItem(for: history))
         menu.addItem(statsSummaryItem(for: history))
         addHistoryItems(history)
 
@@ -68,6 +69,33 @@ class MenuController {
         let avg      = latencies.reduce(0, +) / Double(latencies.count)
         let variance = latencies.map { ($0 - avg) * ($0 - avg) }.reduce(0, +) / Double(latencies.count)
         return variance.squareRoot()
+    }
+
+    private func sparklineItem(for history: [PingResult]) -> NSMenuItem {
+        let blocks: [Character] = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+        let title: String
+        if history.isEmpty {
+            title = "—"
+        } else {
+            let latencies = history.map { $0.latency }
+            let successes = latencies.compactMap { $0 }
+            if successes.isEmpty {
+                title = String(repeating: "·", count: latencies.count)
+            } else {
+                let mn    = successes.min()!
+                let mx    = successes.max()!
+                let range = mx - mn
+                title = String(latencies.map { lat -> Character in
+                    guard let ms = lat else { return "·" }
+                    guard range > 0 else { return blocks[3] }
+                    let index = min(7, Int((ms - mn) / range * 8))
+                    return blocks[index]
+                })
+            }
+        }
+        let item = NSMenuItem(title: title + "  ←oldest   newest→", action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        return item
     }
 
     private func statsSummaryItem(for history: [PingResult]) -> NSMenuItem {
