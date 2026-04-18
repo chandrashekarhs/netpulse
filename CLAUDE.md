@@ -93,8 +93,8 @@ Type these directly in Claude Code:
 Push a git tag to trigger GitHub Actions (`.github/workflows/release.yml`):
 
 ```bash
-git tag v1.3.1
-git push origin v1.3.1
+git tag v1.3.2
+git push origin v1.3.2
 ```
 
 The workflow runs on `macos-latest`, calls `make build` + `bash Scripts/package.sh`, and publishes `NetPulse.dmg` as a GitHub Release asset. Free on public repos; costs 10× minutes on private repos (2 000 min/month free tier).
