@@ -46,7 +46,8 @@ Scripts/
 - **AlertService anti-spam latch** — fires one `UNUserNotification` per bad run; resets on recovery. `onAlert` callback enables unit testing without triggering `UNUserNotificationCenter` (requires app bundle).
 - **Sparkline** — `MenuController.sparklineItem(for:)` maps each `PingResult` to one of 8 Unicode block chars (`▁`–`█`) using absolute latency thresholds (20/40/60/80/100/150/200 ms); timeouts render as `·`. A thin `▏` block appended at the right acts as a "now" playhead marker. Left=oldest, right=newest.
 - **Menu history rows** — `addHistoryItems` displays only the 5 most recent pings (newest first). Internal `PingService` history buffer remains 10 samples so stats and alerts use the full window.
-- **WAN/LAN header symmetry** — Menu header is two items: `NetPulse` (app name) + `WAN: host   N% loss`. LAN section is also two items: `LAN: host   N% loss` + indented stats line. Both sections use the same format.
+- **WAN/LAN header symmetry** — Menu header is two items: `NetPulse` (app name) + `WAN: host   N% loss`. LAN section mirrors the same format.
+- **Two-line stats** — Both WAN (`addStatsItems`) and LAN (`addLanItems`) show identical two-line stats: `avg: X ms   jitter: X ms` then `min: X ms   max: X ms`. avg+jitter = typical experience; min+max = range. LAN lines are indented with leading spaces.
 
 ## UserDefaults Keys
 
@@ -92,8 +93,8 @@ Type these directly in Claude Code:
 Push a git tag to trigger GitHub Actions (`.github/workflows/release.yml`):
 
 ```bash
-git tag v1.3.0
-git push origin v1.3.0
+git tag v1.3.1
+git push origin v1.3.1
 ```
 
 The workflow runs on `macos-latest`, calls `make build` + `bash Scripts/package.sh`, and publishes `NetPulse.dmg` as a GitHub Release asset. Free on public repos; costs 10× minutes on private repos (2 000 min/month free tier).

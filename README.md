@@ -2,7 +2,7 @@
 
 A lightweight macOS menu bar app that monitors network latency in real time. Pings configurable WAN and LAN hosts every few seconds and displays results — color-coded — directly in your status bar, with stats, packet loss, jitter, and smart alert notifications.
 
-![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue) ![Swift](https://img.shields.io/badge/Swift-5.9-orange) ![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue) ![Swift](https://img.shields.io/badge/Swift-5.9-orange) ![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.3.1-blue)
 
 ## Features
 
@@ -99,20 +99,21 @@ Bars are scaled **relative to your current window** — the tallest bar always r
 
 ---
 
-### Stats line — min / avg / max / jitter
+### Stats lines — avg / jitter / min / max
 
 ```
-min: 12 ms   avg: 18 ms   max: 34 ms   jitter: 4 ms
+avg: 18 ms   jitter: 4 ms
+min: 12 ms   max: 34 ms
 ```
 
-Computed from the last 10 successful pings.
+Two lines, computed from the last 10 successful pings. Same format shown for both WAN and LAN sections.
 
 | Metric | What it measures | Good | Concerning |
 |---|---|---|---|
-| `min` | Best-case latency — the floor | < 20 ms | > 100 ms |
 | `avg` | Typical latency you experience | < 50 ms | > 150 ms |
-| `max` | Worst-case spike in the window | < 100 ms | > 300 ms |
 | `jitter` | Standard deviation — how *stable* the connection is | < 10 ms | > 30 ms |
+| `min` | Best-case latency — the floor | < 20 ms | > 100 ms |
+| `max` | Worst-case spike in the window | < 100 ms | > 300 ms |
 
 **Jitter explained:**
 Jitter measures variability, not speed. A connection with `avg: 20 ms, jitter: 2 ms` is very stable — latency barely moves. One with `avg: 20 ms, jitter: 40 ms` is erratic — latency swings wildly even though the average looks fine. High jitter causes choppy audio and video even when average latency seems acceptable.
@@ -166,9 +167,11 @@ A two-line view of your secondary (LAN) host — typically your router. Use this
 NetPulse
 WAN: 8.8.8.8   40% loss
 ·▂·▅·▇·█·▃▏
-min: 80 ms   avg: 210 ms   max: 890 ms   jitter: 190 ms
+avg: 210 ms   jitter: 190 ms
+min: 80 ms    max: 890 ms
 LAN: 192.168.1.1   0% loss
      avg: 1 ms   jitter: 0 ms
+     min: 1 ms   max: 2 ms
 ```
 Router responds instantly (LAN clean), but WAN is dropping packets and spiking. Call your ISP.
 
@@ -177,9 +180,11 @@ Router responds instantly (LAN clean), but WAN is dropping packets and spiking. 
 NetPulse
 WAN: 8.8.8.8   20% loss
 ▂▄·▅▃·▆▄·▅▏
-min: 30 ms   avg: 120 ms   max: 450 ms   jitter: 80 ms
+avg: 120 ms   jitter: 80 ms
+min: 30 ms    max: 450 ms
 LAN: 192.168.1.1   20% loss
      avg: 45 ms   jitter: 35 ms
+     min: 2 ms    max: 180 ms
 ```
 Both WAN and LAN are struggling. The problem is between your Mac and the router — try moving closer or switching to Ethernet.
 
