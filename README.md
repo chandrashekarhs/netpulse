@@ -8,7 +8,11 @@ A lightweight macOS menu bar app that monitors network latency in real time. Pin
 
 - Live latency display in the menu bar (green / orange / red)
 - Last 10 ping results in the dropdown
-- Configurable host and ping interval
+- **Packet loss %** shown in the menu header
+- **Min / avg / max / jitter** stats summary above the ping history
+- **Latency alerts** — macOS notification when latency exceeds a configurable threshold (default 200 ms); smart anti-spam: one alert per bad run, suppressed until recovery
+- **LAN host monitoring** — second configurable ping target (default: `192.168.1.1`) shown as a compact summary so you can distinguish WAN vs LAN problems at a glance
+- Configurable WAN host, LAN host, ping interval, and alert threshold
 - Launch at Login support
 - No Dock icon — lives entirely in the menu bar
 
@@ -19,6 +23,20 @@ A lightweight macOS menu bar app that monitors network latency in real time. Pin
 3. Launch from Spotlight or Applications
 
 > **First launch:** Right-click → Open to bypass Gatekeeper (ad-hoc signed build)
+
+## Menu layout
+
+```
+NetPulse  —  8.8.8.8   2% loss
+─────────────────────────────────────────
+min: 12 ms   avg: 18 ms   max: 34 ms   jitter: 4 ms
+12:01:05      12.3 ms
+12:01:02      18.1 ms
+─────────────────────────────────────────
+LAN: 192.168.1.1   0% loss   avg: 2 ms   jitter: 0 ms
+─────────────────────────────────────────
+Launch at Login  /  Settings…  /  About…  /  Quit
+```
 
 ## Latency indicators
 
