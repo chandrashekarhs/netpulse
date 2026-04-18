@@ -90,7 +90,7 @@ class MenuController {
                 }
             })
         }
-        let item = NSMenuItem(title: "│" + title + "●", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: title + "──▶", action: nil, keyEquivalent: "")
         item.isEnabled = false
         return item
     }
