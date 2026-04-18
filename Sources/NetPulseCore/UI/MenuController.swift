@@ -15,11 +15,14 @@ class MenuController {
     func rebuild(host: String, history: [PingResult], isLoginEnabled: Bool) {
         menu.removeAllItems()
 
-        let header = NSMenuItem(title: "\(Constants.appName)  —  \(host)", action: nil, keyEquivalent: "")
+        let loss      = packetLossPercent(from: history)
+        let lossSuffix = history.isEmpty ? "" : String(format: "   %d%% loss", loss)
+        let header    = NSMenuItem(title: "\(Constants.appName)  —  \(host)\(lossSuffix)", action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
 
+        menu.addItem(statsSummaryItem(for: history))
         addHistoryItems(history)
 
         menu.addItem(.separator())
@@ -48,6 +51,28 @@ class MenuController {
         let item = NSMenuItem(title: title, action: sel, keyEquivalent: key)
         item.target = target
         item.state  = state
+        return item
+    }
+
+    private func packetLossPercent(from history: [PingResult]) -> Int {
+        guard !history.isEmpty else { return 0 }
+        let timeouts = history.filter { !$0.isSuccess }.count
+        return Int((Double(timeouts) / Double(history.count)) * 100)
+    }
+
+    private func statsSummaryItem(for history: [PingResult]) -> NSMenuItem {
+        let latencies = history.compactMap { $0.latency }
+        let title: String
+        if latencies.isEmpty {
+            title = "min: —   avg: —   max: —"
+        } else {
+            let mn  = latencies.min()!
+            let mx  = latencies.max()!
+            let avg = latencies.reduce(0, +) / Double(latencies.count)
+            title = String(format: "min: %.0f ms   avg: %.0f ms   max: %.0f ms", mn, avg, mx)
+        }
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
         return item
     }
 

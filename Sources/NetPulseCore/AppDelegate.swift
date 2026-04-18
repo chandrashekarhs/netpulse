@@ -5,18 +5,21 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuController: MenuController!
     private var pingService: PingService!
     private var networkMonitor: NetworkMonitor!
+    private var alertService: AlertService!
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         guard Self.isFirstInstance() else { NSApp.terminate(nil); return }
         NSApp.setActivationPolicy(.accessory)
 
-        let (host, interval) = Self.loadSettings()
+        let (host, interval, alertThreshold) = Self.loadSettings()
 
-        pingService      = PingService(host: host, interval: interval)
-        networkMonitor   = NetworkMonitor()
+        pingService         = PingService(host: host, interval: interval)
+        networkMonitor      = NetworkMonitor()
         statusBarController = StatusBarController()
-        menuController   = MenuController(target: self)
+        menuController      = MenuController(target: self)
+        alertService        = AlertService(alertThreshold: alertThreshold)
         menuController.attach(to: statusBarController.statusItem)
+        alertService.requestPermission()
 
         // Build initial menu immediately (shows "Waiting for first ping…")
         rebuildMenu()
@@ -30,10 +33,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
             self.rebuildMenu()
         }
 
-        pingService.onResult = { [weak self] _ in
+        pingService.onResult = { [weak self] result in
             guard let self else { return }
             let latency: Double? = self.pingService.history.last.flatMap { $0.latency }
             self.statusBarController.update(latency: latency, isConnected: self.networkMonitor.isConnected)
+            self.alertService.evaluate(result: result)
             self.rebuildMenu()
         }
 
@@ -44,10 +48,17 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu actions
 
     @objc func showSettings() {
-        SettingsPanel.show(host: pingService.host, interval: pingService.interval) { [weak self] newHost, newInterval in
+        SettingsPanel.show(
+            host: pingService.host,
+            interval: pingService.interval,
+            alertThreshold: alertService.alertThreshold
+        ) { [weak self] newHost, newInterval, newThreshold in
             guard let self else { return }
-            UserDefaults.standard.set(newHost,     forKey: Constants.UserDefaultsKey.pingHost)
-            UserDefaults.standard.set(newInterval, forKey: Constants.UserDefaultsKey.pingInterval)
+            UserDefaults.standard.set(newHost,      forKey: Constants.UserDefaultsKey.pingHost)
+            UserDefaults.standard.set(newInterval,  forKey: Constants.UserDefaultsKey.pingInterval)
+            UserDefaults.standard.set(newThreshold, forKey: Constants.UserDefaultsKey.alertThreshold)
+            self.alertService.alertThreshold = newThreshold
+            self.alertService.reset()
             self.pingService.restart(host: newHost, interval: newInterval)
             self.rebuildMenu()
         }
@@ -79,7 +90,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    private static func loadSettings() -> (host: String, interval: Double) {
+    private static func loadSettings() -> (host: String, interval: Double, alertThreshold: Double) {
         let defaults = UserDefaults.standard
         let host = {
             let h = defaults.string(forKey: Constants.UserDefaultsKey.pingHost) ?? ""
@@ -89,6 +100,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
             let i = defaults.double(forKey: Constants.UserDefaultsKey.pingInterval)
             return i >= 1 ? i : Constants.Defaults.pingInterval
         }()
-        return (host, interval)
+        let alertThreshold = {
+            let t = defaults.double(forKey: Constants.UserDefaultsKey.alertThreshold)
+            return t >= 1 ? t : Constants.Defaults.alertThreshold
+        }()
+        return (host, interval, alertThreshold)
     }
 }
