@@ -15,11 +15,15 @@ class MenuController {
     func rebuild(host: String, history: [PingResult], lanHost: String, lanHistory: [PingResult], isLoginEnabled: Bool) {
         menu.removeAllItems()
 
+        let appNameItem = NSMenuItem(title: Constants.appName, action: nil, keyEquivalent: "")
+        appNameItem.isEnabled = false
+        menu.addItem(appNameItem)
+
         let loss       = packetLossPercent(from: history)
         let lossSuffix = history.isEmpty ? "" : String(format: "   %d%% loss", loss)
-        let header     = NSMenuItem(title: "\(Constants.appName)  —  \(host)\(lossSuffix)", action: nil, keyEquivalent: "")
-        header.isEnabled = false
-        menu.addItem(header)
+        let wanItem    = NSMenuItem(title: "WAN: \(host)\(lossSuffix)", action: nil, keyEquivalent: "")
+        wanItem.isEnabled = false
+        menu.addItem(wanItem)
         menu.addItem(.separator())
 
         menu.addItem(sparklineItem(for: history))
@@ -27,7 +31,7 @@ class MenuController {
         addHistoryItems(history)
 
         menu.addItem(.separator())
-        menu.addItem(lanSummaryItem(host: lanHost, history: lanHistory))
+        addLanItems(host: lanHost, history: lanHistory)
 
         menu.addItem(.separator())
         menu.addItem(action(title: "Launch at Login",
@@ -112,10 +116,15 @@ class MenuController {
         return item
     }
 
-    private func lanSummaryItem(host: String, history: [PingResult]) -> NSMenuItem {
+    private func addLanItems(host: String, history: [PingResult]) {
         let latencies  = history.compactMap { $0.latency }
         let loss       = packetLossPercent(from: history)
         let lossSuffix = history.isEmpty ? "" : String(format: "   %d%% loss", loss)
+
+        let headerItem = NSMenuItem(title: "LAN: \(host)\(lossSuffix)", action: nil, keyEquivalent: "")
+        headerItem.isEnabled = false
+        menu.addItem(headerItem)
+
         let statsStr: String
         if latencies.isEmpty {
             statsStr = "—"
@@ -123,9 +132,9 @@ class MenuController {
             let avg = latencies.reduce(0, +) / Double(latencies.count)
             statsStr = String(format: "avg: %.0f ms   jitter: %.0f ms", avg, jitter(from: latencies))
         }
-        let item = NSMenuItem(title: "LAN: \(host)\(lossSuffix)   \(statsStr)", action: nil, keyEquivalent: "")
-        item.isEnabled = false
-        return item
+        let statsItem = NSMenuItem(title: "     \(statsStr)", action: nil, keyEquivalent: "")
+        statsItem.isEnabled = false
+        menu.addItem(statsItem)
     }
 
     private func addHistoryItems(_ history: [PingResult]) {
@@ -137,7 +146,7 @@ class MenuController {
         }
         let fmt = DateFormatter()
         fmt.dateFormat = "HH:mm:ss"
-        for result in history.reversed() {
+        for result in history.reversed().prefix(5) {
             let time  = fmt.string(from: result.timestamp)
             let label = result.latency.map { String(format: "\(time)   %5.1f ms", $0) }
                      ?? "\(time)   ✗  timeout"
