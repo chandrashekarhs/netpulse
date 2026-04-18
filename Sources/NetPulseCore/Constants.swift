@@ -6,13 +6,15 @@ enum Constants {
     static let bundleID   = "com.\(NSUserName()).netpulse"
 
     enum Defaults {
-        static let pingHost     = "8.8.8.8"
-        static let pingInterval = 3.0
-        static let historyLimit = 10
+        static let pingHost       = "8.8.8.8"
+        static let pingInterval   = 3.0
+        static let historyLimit   = 10
+        static let alertThreshold = 200.0
     }
 
     enum UserDefaultsKey {
-        static let pingHost     = "pingHost"
-        static let pingInterval = "pingInterval"
+        static let pingHost       = "pingHost"
+        static let pingInterval   = "pingInterval"
+        static let alertThreshold = "alertThreshold"
     }
 }
