@@ -43,6 +43,7 @@ Scripts/
 - **Menu rebuilt on every event** — `MenuController.rebuild()` is called after each ping result and each network state change. Simple and correct; not a performance concern at this scale.
 - **Callback pattern** — `PingService.onResult` and `NetworkMonitor.onStatusChange` deliver events to `AppDelegate` on the main queue.
 - **Two PingService instances** — `pingService` (WAN) drives the status bar, alert evaluation, and menu; `lanPingService` (LAN) drives only the compact LAN summary line. Both share the same ping interval.
+- **GatewayDetector** — `Services/GatewayDetector.swift` runs `/sbin/route get default` on a background queue and returns the active gateway IP via callback. Called inside `NetworkMonitor.onStatusChange(connected: true)` so LAN host auto-updates on every network change (Wi-Fi switch, hotspot, VPN). Falls back to last known host if detection fails.
 - **AlertService anti-spam latch** — fires one `UNUserNotification` per bad run; resets on recovery. `onAlert` callback enables unit testing without triggering `UNUserNotificationCenter` (requires app bundle).
 - **Sparkline** — `MenuController.sparklineItem(for:)` maps each `PingResult` to one of 8 Unicode block chars (`▁`–`█`) using absolute latency thresholds (20/40/60/80/100/150/200 ms); timeouts render as `·`. A thin `▏` block appended at the right acts as a "now" playhead marker. Left=oldest, right=newest.
 - **Menu history rows** — `addHistoryItems` displays only the 5 most recent pings (newest first). Internal `PingService` history buffer remains 10 samples so stats and alerts use the full window.
@@ -93,8 +94,8 @@ Type these directly in Claude Code:
 Push a git tag to trigger GitHub Actions (`.github/workflows/release.yml`):
 
 ```bash
-git tag v1.3.2
-git push origin v1.3.2
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
 The workflow runs on `macos-latest`, calls `make build` + `bash Scripts/package.sh`, and publishes `NetPulse.dmg` as a GitHub Release asset. Free on public repos; costs 10× minutes on private repos (2 000 min/month free tier).

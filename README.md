@@ -2,7 +2,7 @@
 
 A lightweight macOS menu bar app that monitors network latency in real time. Pings configurable WAN and LAN hosts every few seconds and displays results — color-coded — directly in your status bar, with stats, packet loss, jitter, and smart alert notifications.
 
-![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue) ![Swift](https://img.shields.io/badge/Swift-5.9-orange) ![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.3.2-blue)
+![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue) ![Swift](https://img.shields.io/badge/Swift-5.9-orange) ![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.4.0-blue)
 
 ## Features
 
@@ -12,6 +12,7 @@ A lightweight macOS menu bar app that monitors network latency in real time. Pin
 - **Packet loss %** shown in both WAN and LAN headers
 - **Sparkline graph** — `▁▂▃▄▅▆▇█▏` Unicode bar chart with a thin playhead marker at the right (newest); timeouts shown as `·`; bars use absolute latency thresholds
 - **Min / avg / max / jitter** stats summary above the ping history
+- **Auto-detect LAN gateway** — on every network change (Wi-Fi switch, hotspot, VPN), the default gateway is detected automatically via the routing table and used as the LAN ping target; no manual reconfiguration needed
 - **LAN two-line summary** — host + loss on one line, avg + jitter stats indented below
 - **Latency alerts** — macOS notification when latency exceeds a configurable threshold (default 200 ms); smart anti-spam: one alert per bad run, suppressed until recovery
 - Configurable WAN host, LAN host, ping interval, and alert threshold
