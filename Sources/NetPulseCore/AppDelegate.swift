@@ -26,16 +26,21 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         // Build initial menu immediately (shows "Waiting for first ping…")
         rebuildMenu()
 
-        // Network down: stop both services; reconnect: resume both
+        // Network down: stop services; reconnect: auto-detect gateway then resume LAN
         networkMonitor.onStatusChange = { [weak self] connected in
             guard let self else { return }
             if !connected {
                 self.statusBarController.update(latency: nil, isConnected: false)
                 self.lanPingService.stop()
+                self.rebuildMenu()
             } else {
-                self.lanPingService.start()
+                GatewayDetector.detect { [weak self] gateway in
+                    guard let self else { return }
+                    let host = gateway ?? self.lanPingService.host
+                    self.lanPingService.restart(host: host, interval: self.pingService.interval)
+                    self.rebuildMenu()
+                }
             }
-            self.rebuildMenu()
         }
 
         pingService.onResult = { [weak self] result in
